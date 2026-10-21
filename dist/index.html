@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Privacy-safe public demo of an evidence-aware opportunity decision dashboard.">
+  <meta name="robots" content="index,follow">
+  <title>Career OS — Public Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Career OS home"><span class="brand-mark">C</span>Career OS <em>Public Demo</em></a>
+    <nav aria-label="Primary"><a href="#queue">Decision queue</a><a href="#method">How it works</a></nav>
+    <button id="theme" class="icon-button" type="button" aria-label="Toggle color theme">◐</button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">A privacy-safe product demonstration</p>
+        <h1>Turn a noisy job search into a clear daily decision.</h1>
+        <p class="hero-copy">A deterministic queue that explains what to pursue, what needs review, and what is not worth your time—without exposing anyone's private career data.</p>
+      </div>
+      <aside class="privacy-card" aria-label="Privacy guarantee">
+        <span class="privacy-icon">✓</span>
+        <div><strong>Synthetic data only</strong><p>No real profile, resume, contact details, application history, or private backend is connected to this site.</p></div>
+      </aside>
+    </section>
+
+    <section class="snapshot" aria-label="Queue summary">
+      <div><span id="count-total">0</span><small>opportunities</small></div>
+      <div><span id="count-today">0</span><small>apply today</small></div>
+      <div><span id="count-tailor">0</span><small>tailor</small></div>
+      <div><span id="count-review">0</span><small>manual review</small></div>
+    </section>
+
+    <section id="queue" class="workspace">
+      <div class="section-heading">
+        <div><p class="eyebrow">Synthetic opportunity queue</p><h2>Start with the highest-leverage action.</h2></div>
+        <p>Routing remains explicit and auditable. Select a row to inspect the reasons and evidence behind the decision.</p>
+      </div>
+
+      <div class="toolbar" role="group" aria-label="Queue filters">
+        <div class="segmented" id="route-filters">
+          <button class="active" data-route="ALL">All</button>
+          <button data-route="TAILOR_AND_APPLY">Tailor</button>
+          <button data-route="FAST_APPLY">Fast apply</button>
+          <button data-route="MANUAL_REVIEW">Review</button>
+          <button data-route="SKIP">Skip</button>
+        </div>
+        <label class="search"><span>Search</span><input id="search" type="search" placeholder="Company, role, or lane…"></label>
+      </div>
+
+      <div class="queue-layout">
+        <div id="job-list" class="job-list" aria-live="polite"></div>
+        <aside id="detail" class="detail" aria-live="polite"><div class="detail-placeholder"><span>↗</span><h3>Select an opportunity</h3><p>Decision reasons, gaps, and traceable synthetic evidence will appear here.</p></div></aside>
+      </div>
+    </section>
+
+    <section id="method" class="method">
+      <div class="section-heading light"><div><p class="eyebrow">Product architecture</p><h2>Policy stays outside the interface.</h2></div><p>The UI presents authoritative decisions; it does not invent scores, infer missing facts, or answer sensitive questions.</p></div>
+      <div class="method-grid">
+        <article><b>01</b><h3>Parse</h3><p>Normalize role, requirements, constraints, and source metadata.</p></article>
+        <article><b>02</b><h3>Evaluate</h3><p>Compare requirements with evidence and preserve uncertainty.</p></article>
+        <article><b>03</b><h3>Route</h3><p>Apply deterministic rules for fast apply, tailoring, review, or skip.</p></article>
+        <article><b>04</b><h3>Explain</h3><p>Show the reasons, gaps, and evidence that produced the decision.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><p>Career OS Public Demo · Synthetic data only · No application submission</p><a href="#top">Back to top ↑</a></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
