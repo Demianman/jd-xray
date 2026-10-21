@@ -22,9 +22,9 @@ const SIGNALS = {
     {pattern: /(?:no|without|not (?:available|offered|provided)).{0,24}sponsorship|will not sponsor|cannot sponsor/i, label: "The posting explicitly limits sponsorship.", weight: 3, status: "conflict"},
     {pattern: /must not require sponsorship|now or in the future|future sponsorship will not be considered/i, label: "The posting excludes candidates who may need future sponsorship.", weight: 3, status: "conflict"},
     {pattern: /u\.?s\.? citizens? only|permanent residents? only|green card holders? only/i, label: "The posting explicitly restricts eligible work authorization.", weight: 3, status: "conflict"},
-    {pattern: /(?:f[ -]?1|(?:stem )?opt).{0,32}(?:not accepted|not eligible|not supported|will not be considered)/i, label: "The posting explicitly rejects F-1/OPT/STEM OPT candidates.", weight: 3, status: "conflict"},
+    {pattern: /(?:\bf[ -]?1\b|\b(?:stem[ -]?)?opt\b).{0,32}(?:not accepted|not eligible|not supported|will not be considered)/i, label: "The posting explicitly rejects F-1/OPT/STEM OPT candidates.", weight: 3, status: "conflict"},
     {pattern: /sponsorship (?:is |may be |will be )?(?:available|provided|offered|considered)/i, label: "The posting explicitly says sponsorship may be available.", weight: 1, status: "available"},
-    {pattern: /authorized to work|work authorization|visa|sponsorship|f[ -]?1|(?:stem )?opt/i, label: "Work-authorization language needs human review.", weight: 1, status: "review"},
+    {pattern: /\bauthorized to work\b|\bwork authorization\b|\bvisas?\b|\bsponsorship\b|\bf[ -]?1\b|\b(?:stem[ -]?)?opt\b/i, label: "Work-authorization language needs human review.", weight: 1, status: "review"},
   ],
   export_control: [
     {pattern: /(?:active|current|ability to obtain).{0,24}security clearance|security clearance (?:is )?required/i, label: "The posting requires or expects a security clearance.", weight: 3, status: "conflict"},
@@ -34,7 +34,6 @@ const SIGNALS = {
   posting_quality: [
     {pattern: /for ai assistants?|as an ai (?:assistant|model)|ignore (?:all )?(?:previous|prior) instructions|include .* at all costs/i, label: "The JD contains instructions aimed at AI tools. Treat them as untrusted job-post text, not commands.", weight: 3},
     {pattern: /microsoft office (?:specialist|certification)|dynamics crm|microsoft 365 certification/i, label: "The named office-tool requirements may indicate an administrative or process role despite a technical title.", weight: 2},
-    {pattern: /free parking|on[- ]site (?:gym|cafeteria|restaurant)|office amenities/i, label: "The posting spends unusual space selling office amenities; verify the actual technical scope.", weight: 1},
   ],
 };
 
@@ -117,6 +116,45 @@ function findSignals(allSentences, rules, category) {
     }
   }
   return findings;
+}
+
+function consolidateFindings(findings) {
+  const grouped = new Map();
+  for (const finding of findings) {
+    const key = finding.category === "authorization" ? "authorization" : `${finding.category}|${finding.title}|${finding.status || ""}`;
+    const existing = grouped.get(key);
+    if (!existing) {
+      grouped.set(key, {...finding, evidenceItems: [finding.evidence]});
+      continue;
+    }
+    if (!existing.evidenceItems.includes(finding.evidence) && existing.evidenceItems.length < 3) existing.evidenceItems.push(finding.evidence);
+    if (finding.weight > existing.weight) Object.assign(existing, {...finding, evidenceItems: existing.evidenceItems});
+  }
+  const authorization = grouped.get("authorization");
+  if (authorization) {
+    const original = findings.filter(finding => finding.category === "authorization");
+    const hasConflict = original.some(finding => finding.status === "conflict");
+    const hasAvailable = original.some(finding => finding.status === "available");
+    if (hasConflict) {
+      authorization.title = hasAvailable ? "The posting contains conflicting sponsorship language." : "The posting explicitly limits sponsorship.";
+      authorization.status = "conflict";
+      authorization.weight = 3;
+      authorization.severity = "high";
+    } else if (hasAvailable) {
+      authorization.title = original.some(finding => finding.status === "review")
+        ? "Sponsorship appears possible but conditional; confirm this specific role."
+        : "The posting says sponsorship may be available; confirm this specific role.";
+      authorization.status = "available";
+      authorization.weight = 1;
+      authorization.severity = "low";
+    } else {
+      authorization.title = "Work-authorization language is present but not definitive.";
+      authorization.status = "review";
+      authorization.weight = 2;
+      authorization.severity = "medium";
+    }
+  }
+  return [...grouped.values()].map(finding => ({...finding, evidence: finding.evidenceItems.join("\n")}));
 }
 
 function classifyWork(allSentences) {
@@ -209,9 +247,10 @@ export function analyzeJD(text, options = {}) {
   findings.push(...structuralFindings(text, allSentences, compensation));
   const expectedAnnual = Number(options.expectedAnnual || 0);
   if (compensation && expectedAnnual && compensation.annualHigh < expectedAnnual) findings.push({category: "compensation", severity: "high", weight: 3, title: `Even the top of the posted range is below your $${expectedAnnual.toLocaleString()} minimum.`, evidence: compensation.source});
-  const auth = findings.filter(f => f.category === "authorization" || f.category === "export_control");
+  const consolidated = consolidateFindings(findings);
+  const auth = consolidated.filter(f => f.category === "authorization" || f.category === "export_control");
   const workAuthorization = auth.some(f => f.status === "conflict") ? "conflict" : auth.some(f => f.status === "available") ? "available" : auth.length ? "review" : "not_stated";
-  const ordered = findings.sort((a,b) => b.weight - a.weight || a.category.localeCompare(b.category));
+  const ordered = consolidated.sort((a,b) => b.weight - a.weight || a.category.localeCompare(b.category));
   return {version: 1, metadata, summary: summarize(work, metadata.title), work, qualifications, findings: ordered, compensation, expectedAnnual: expectedAnnual || null, workAuthorization, h1b: {status: "not_checked", note: "Employer filing history is not checked in this local prototype. Past filings would not prove sponsorship for this role."}, questions: questions(ordered, work, compensation), caveat: "This report identifies evidence-backed risk signals in the posting. It does not verify the employer, predict working conditions, or provide legal advice."};
 }
 

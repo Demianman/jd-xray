@@ -49,4 +49,21 @@ assert.equal(intermediaryMetadata.title, "Software Engineer");
 
 const titleFallback = extractMetadata(`Build production APIs, services, and reliable applications with the engineering team.`, {pageTitle:"Platform Engineer | Example Careers"});
 assert.equal(titleFallback.title, "Platform Engineer");
+
+const optWordBoundary = analyzeJD(`Applied AI Engineer. Create reference implementations and sample code that companies can adopt for scientific workflows. Build production services and collaborate with engineers. We offer competitive compensation and benefits, optional equity donation matching, generous vacation, parental leave, and flexible working hours.`, {title:"Applied AI Engineer"});
+assert.equal(optWordBoundary.workAuthorization, "not_stated");
+assert.equal(optWordBoundary.findings.filter(item => item.category === "authorization").length, 0);
+assert(!optWordBoundary.findings.some(item => /amenities|benefits/i.test(item.title)));
+
+const conditionalSponsorship = analyzeJD(`Applied AI Engineer. Build production services, reference implementations, and scientific data workflows. Visa sponsorship: We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.`, {title:"Applied AI Engineer"});
+const authorizationFindings = conditionalSponsorship.findings.filter(item => item.category === "authorization");
+assert.equal(authorizationFindings.length, 1);
+assert.equal(authorizationFindings[0].status, "review");
+assert.equal(authorizationFindings[0].evidenceItems.length, 3);
+
+const repeatedConflict = analyzeJD(`Software Engineer. Build reliable production APIs with the platform team. This company cannot sponsor employment visas. Sponsorship is not available for this role. Applicants must not require sponsorship now or in the future.`, {title:"Software Engineer"});
+const conflictFindings = repeatedConflict.findings.filter(item => item.category === "authorization");
+assert.equal(conflictFindings.length, 1);
+assert.equal(conflictFindings[0].status, "conflict");
+assert.equal(repeatedConflict.workAuthorization, "conflict");
 console.log("JD X-ray engine tests passed.");

@@ -26,7 +26,7 @@
           <label>Full job description<textarea name="jd" rows="18" minlength="100" placeholder="Paste the complete job description here…" required></textarea></label>
           <details class="metadata-override"><summary>Correct company or title <span>only if needed</span></summary><div class="field-row"><label>Role title<input name="title" placeholder="Auto-detect"></label><label>Company<input name="company" placeholder="Auto-detect"></label></div></details>
           <details class="expectations"><summary>Optional: my expectations</summary><div><label>Minimum acceptable annual base salary<input name="expectedAnnual" type="number" min="0" step="1000" placeholder="120000"></label><p>Used only to flag a posted range below your floor. It stays in this browser.</p></div></details>
-          <div class="form-actions stacked-actions"><button type="button" class="button" id="sample">Use a revealing sample</button><div><button type="button" class="button" id="clipboard">Paste clipboard + analyze</button><button class="button primary" type="submit">Analyze this JD →</button></div></div>
+          <div class="form-actions stacked-actions"><div><button type="button" class="button" id="sample">Use a revealing sample</button><button type="button" class="button clear-button" id="clear">Clear JD</button></div><div><button type="button" class="button" id="clipboard">Paste clipboard + analyze</button><button class="button primary" type="submit">Analyze this JD →</button></div></div>
         </form>
         <section id="report" class="report empty-report" aria-live="polite"><div><span>↳</span><h3>Your report will appear here.</h3><p>Start with one real JD. You do not need to describe yourself first.</p></div></section>
       </div>
