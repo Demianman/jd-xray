@@ -1,0 +1,7 @@
+.qualification-card{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;margin:24px 0;padding:18px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.qualification-card>.eyebrow{grid-column:1/-1;margin:0}
+.qualification-card>div{display:flex;gap:24px}
+.qualification-card strong{font:500 26px Georgia,serif}
+.qualification-card small{display:block;color:var(--muted);font:500 10px Inter,sans-serif}
+.qualification-card>p:last-child{max-width:220px;margin:0;color:var(--muted);font-size:11px}
+@media(max-width:560px){.qualification-card{grid-template-columns:1fr}.qualification-card>p:last-child{max-width:none}}

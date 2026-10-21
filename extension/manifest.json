@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "JD X-ray",
+  "version": "0.1.0",
+  "description": "Read the job behind the job post, with evidence-backed risk and compensation analysis.",
+  "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
+  "background": {"service_worker": "service-worker.js"},
+  "action": {"default_title": "Analyze this job description"},
+  "side_panel": {"default_path": "sidepanel.html"}
+}

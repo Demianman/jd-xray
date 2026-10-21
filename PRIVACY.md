@@ -8,7 +8,8 @@ private repository. Only the files in this repository may be published.
 - generic product language;
 - synthetic companies, roles, scores, and explanations;
 - generic descriptions of deterministic routing and evidence-aware decisions;
-- browser-local demo interactions.
+- browser-local demo interactions;
+- a browser extension that reads only the active page after an explicit user click.
 
 ## Prohibited
 
@@ -18,6 +19,12 @@ private repository. Only the files in this repository may be published.
 - tracker rows, evaluation snapshots, generated resumes, or artifacts;
 - absolute filesystem paths, credentials, tokens, cookies, environment files, or private URLs;
 - Git history from the private project.
+
+## Extension permissions
+
+The prototype is intentionally limited to `activeTab`, `scripting`, `sidePanel`, and `storage`.
+It does not request persistent access to every site, browsing history, identity, or downloads. Page
+text is analyzed locally in the extension and is not retained by the extension.
 
 ## Before every publication
 

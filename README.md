@@ -1,40 +1,29 @@
-# Career OS — Public Demo
+# JD X-ray — Public Prototype
 
-A privacy-safe, standalone job-opportunity decision tool. Visitors can build an anonymous
-browser-local profile, paste a real job description, verify extracted requirements, receive an
-explainable route, save a queue, and import/export or erase their data.
+A privacy-safe, standalone job-description inspector. Visitors can paste a real posting and receive
+an evidence-backed read on the work mix, staffing or contract signals, work-intensity language,
+title–scope mismatch, work-authorization wording, compensation, and recruiter questions.
 
-## Privacy boundary
+The primary flow requires no account and no personal profile. A Chrome/Edge Manifest V3 side-panel
+prototype is published as a downloadable ZIP. It requests only `activeTab`, `scripting`, `sidePanel`,
+and `storage`; it reads the active page only after the visitor clicks the extension.
 
-This repository contains **synthetic demo data only**. It does not contain or connect to:
+## Important limits
 
-- names, email addresses, phone numbers, schools, employers, resumes, or experience records;
-- application history, work-authorization details, profile evidence, or private tracker data;
-- local filesystem paths, credentials, environment files, or the private Career OS repository;
-- live mutation endpoints, job-board credentials, or automated application submission.
+- Findings are explainable risk signals, not employer or workplace verification.
+- Work-mix percentages measure emphasis in the posting, not guaranteed time allocation.
+- Hourly/annual conversion uses 2,080 hours and does not include bonus, equity, overtime, or unpaid time.
+- Employer H-1B history is deliberately marked unavailable until legal-entity matching and official
+  disclosure-data ingestion are implemented.
+- The local prototype does not use a hosted language model. It makes higher-order deductions from
+  combinations of responsibilities and employment terms, with the triggering sentences attached.
 
-See [PRIVACY.md](PRIVACY.md) for the publication checklist.
-
-## Run locally
+## Run and verify
 
 ```bash
 python3 -m http.server 4173 --directory dist
-```
-
-Then open `http://localhost:4173`.
-
-## Verify
-
-```bash
+node scripts/test-engine.mjs
 node scripts/verify-public.mjs
 ```
 
-The verification script checks required files, empty shipped runtime data, forbidden identity markers,
-absolute local paths, secrets, and basic data integrity.
-
-## Architecture
-
-The public app is deliberately buildless: semantic HTML, responsive CSS, and dependency-free
-JavaScript. Parsing and scoring are deterministic browser modules. Anonymous profile and opportunity
-state are stored only in the visitor's browser with `localStorage`.
-The hosted site is a separate project and cannot read the private Career OS backend.
+The hosted site is a separate public project and cannot read the private Career OS backend.
