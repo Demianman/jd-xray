@@ -1,6 +1,8 @@
 # Career OS — Public Demo
 
-A privacy-safe, standalone demonstration of a job-opportunity decision dashboard.
+A privacy-safe, standalone job-opportunity decision tool. Visitors can build an anonymous
+browser-local profile, paste a real job description, verify extracted requirements, receive an
+explainable route, save a queue, and import/export or erase their data.
 
 ## Privacy boundary
 
@@ -27,11 +29,12 @@ Then open `http://localhost:4173`.
 node scripts/verify-public.mjs
 ```
 
-The verification script checks required files, synthetic-data labels, forbidden identity markers,
+The verification script checks required files, empty shipped runtime data, forbidden identity markers,
 absolute local paths, secrets, and basic data integrity.
 
 ## Architecture
 
-The public demo is deliberately buildless: semantic HTML, responsive CSS, and dependency-free
-JavaScript. Opportunity state is stored only in the visitor's browser with `localStorage`.
+The public app is deliberately buildless: semantic HTML, responsive CSS, and dependency-free
+JavaScript. Parsing and scoring are deterministic browser modules. Anonymous profile and opportunity
+state are stored only in the visitor's browser with `localStorage`.
 The hosted site is a separate project and cannot read the private Career OS backend.
