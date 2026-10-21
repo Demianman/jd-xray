@@ -64,6 +64,50 @@ function clean(text) { return String(text || "").replace(/\s+/g, " ").trim(); }
 function sentences(text) { return String(text || "").replace(/\bU\.S\./gi, "US").split(SENTENCE_SPLIT).map(clean).filter(s => s.length >= 12 && s.length <= 700); }
 function uniq(items) { return [...new Set(items)]; }
 
+function tidyEntity(value) {
+  return clean(value).replace(/^[\s:–—-]+|[\s:–—-]+$/g, "").replace(/\s+(?:careers?|jobs?|hiring)$/i, "").slice(0, 120);
+}
+
+function plausibleTitle(value) {
+  const title = tidyEntity(value).replace(/\s+(?:in|at)\s+(?:our|the)\s+.+$/i, "");
+  return /\b(?:engineer|scientist|developer|analyst|manager|specialist|researcher|designer|consultant|architect|director|intern|associate|technician|lead)\b/i.test(title) && title.split(/\s+/).length <= 14 ? title : null;
+}
+
+export function extractMetadata(text, options = {}) {
+  const raw = String(text || "").replace(/\r/g, "");
+  const lines = raw.split("\n").map(clean).filter(Boolean).slice(0, 80);
+  let title = tidyEntity(options.title || ""), company = tidyEntity(options.company || "");
+  let titleConfidence = title ? "confirmed" : "unavailable", companyConfidence = company ? "confirmed" : "unavailable";
+  let titleEvidence = title ? "User-provided title" : null, companyEvidence = company ? "User-provided company" : null;
+  if (!title) {
+    for (const line of lines.slice(0, 30)) {
+      const labelled = line.match(/^(?:job\s+)?(?:title|role|position)\s*[:–—-]\s*(.+)$/i);
+      const heading = lines.indexOf(line) < 8 ? plausibleTitle(line) : null;
+      const hired = line.match(/(?:we (?:are|'re) |(?:is|are) )(?:actively )?(?:hiring|seeking|looking for)\s+(?:an?\s+|our next\s+)?(.+?)(?:\s+(?:to|who will|for (?:an?|the|our)|at (?:our|the))\b|[.!]|$)/i);
+      const joined = line.match(/join\s+.+?\s+as\s+(?:an?\s+)?(.+?)(?:\s+(?:to|who will|and)\b|[.!]|$)/i);
+      const candidate = plausibleTitle(labelled?.[1] || hired?.[1] || joined?.[1] || heading || "");
+      if (candidate) { title = candidate; titleConfidence = labelled || (heading && !hired && !joined) ? "high" : "medium"; titleEvidence = line; break; }
+    }
+  }
+  if (!company) {
+    for (const line of lines.slice(0, 40)) {
+      const labelled = line.match(/^(?:company|organization|employer)\s*[:–—-]\s*(.+)$/i);
+      const about = line.match(/^about\s+([A-Z][A-Za-z0-9&.'’ -]{1,70})$/);
+      const atCompany = line.match(/^at\s+([A-Z][A-Za-z0-9&.'’ -]{1,60}),\s+(?:we|our)\b/);
+      const companyIs = line.match(/^([A-Z][A-Za-z0-9&.'’ -]{1,60})\s+is\s+(?:an?|the|one of|building|creating|transforming|hiring)\b/);
+      const join = line.match(/^join\s+([A-Z][A-Za-z0-9&.'’ -]{1,60})\s+as\b/i);
+      const candidate = tidyEntity(labelled?.[1] || about?.[1] || atCompany?.[1] || companyIs?.[1] || join?.[1] || "");
+      if (candidate && !/^(our client|the company|company|we)$/i.test(candidate) && candidate.split(/\s+/).length <= 10) { company = candidate; companyConfidence = labelled || about ? "high" : "medium"; companyEvidence = line; break; }
+    }
+  }
+  if (!title && options.pageTitle) {
+    const parts = String(options.pageTitle).split(/\s+[|·–—-]\s+/);
+    const candidate = parts.map(plausibleTitle).find(Boolean);
+    if (candidate) { title = candidate; titleConfidence = "low"; titleEvidence = options.pageTitle; }
+  }
+  return {title: title || null, company: company || null, titleConfidence, companyConfidence, titleEvidence, companyEvidence};
+}
+
 function findSignals(allSentences, rules, category) {
   const findings = [];
   for (const sentence of allSentences) for (const rule of rules) {
@@ -155,9 +199,10 @@ function questions(findings, work, compensation) {
 export function analyzeJD(text, options = {}) {
   if (clean(text).length < 100) throw new Error("Paste a fuller job description so the analysis has enough context.");
   const allSentences = sentences(text);
+  const metadata = extractMetadata(text, options);
   const work = classifyWork(allSentences);
   const findings = Object.entries(SIGNALS).flatMap(([category, rules]) => findSignals(allSentences, rules, category));
-  const mismatch = titleMismatch(options.title || "", work);
+  const mismatch = titleMismatch(metadata.title || "", work);
   if (mismatch) findings.push(mismatch);
   const compensation = parseCompensation(text);
   const qualifications = parseQualifications(allSentences);
@@ -167,7 +212,7 @@ export function analyzeJD(text, options = {}) {
   const auth = findings.filter(f => f.category === "authorization" || f.category === "export_control");
   const workAuthorization = auth.some(f => f.status === "conflict") ? "conflict" : auth.some(f => f.status === "available") ? "available" : auth.length ? "review" : "not_stated";
   const ordered = findings.sort((a,b) => b.weight - a.weight || a.category.localeCompare(b.category));
-  return {version: 1, summary: summarize(work, options.title), work, qualifications, findings: ordered, compensation, expectedAnnual: expectedAnnual || null, workAuthorization, h1b: {status: "not_checked", note: "Employer filing history is not checked in this local prototype. Past filings would not prove sponsorship for this role."}, questions: questions(ordered, work, compensation), caveat: "This report identifies evidence-backed risk signals in the posting. It does not verify the employer, predict working conditions, or provide legal advice."};
+  return {version: 1, metadata, summary: summarize(work, metadata.title), work, qualifications, findings: ordered, compensation, expectedAnnual: expectedAnnual || null, workAuthorization, h1b: {status: "not_checked", note: "Employer filing history is not checked in this local prototype. Past filings would not prove sponsorship for this role."}, questions: questions(ordered, work, compensation), caveat: "This report identifies evidence-backed risk signals in the posting. It does not verify the employer, predict working conditions, or provide legal advice."};
 }
 
 export { parseCompensation };

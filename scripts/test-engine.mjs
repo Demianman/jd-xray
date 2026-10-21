@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {analyzeJD, parseCompensation} from "../dist/engine.js";
+import {analyzeJD, extractMetadata, parseCompensation} from "../dist/engine.js";
 
 const revealing = `Our client is seeking a Machine Learning Engineer for a contract-to-hire engagement in a fast-paced environment. You will partner with sales, run customer demonstrations, lead client implementations, resolve support tickets, build dashboards, and maintain data pipelines. You may occasionally prototype machine-learning features. This role participates in an after-hours on-call rotation. Applicants must be authorized to work in the United States without current or future sponsorship. Compensation: $42-$50 per hour.`;
 const result = analyzeJD(revealing, {title:"Machine Learning Engineer", expectedAnnual:120000});
@@ -28,4 +28,25 @@ assert(learnedCases.findings.some(item => item.category === "compensation" && /f
 const itarOnly = analyzeJD(`Software Engineer. Build production systems and reliable APIs for a product subject to ITAR and export control review. Collaborate with engineering and product teams. The posting does not state a citizenship or U.S.-person requirement.`, {title:"Software Engineer"});
 assert.equal(itarOnly.workAuthorization, "review");
 assert(!itarOnly.findings.some(item => item.category === "export_control" && item.status === "conflict"));
+
+const naturalMetadata = extractMetadata(`Acme Health is hiring an Applied AI Engineer to build clinical automation.\nYou will design production systems and work with clinicians.`);
+assert.equal(naturalMetadata.title, "Applied AI Engineer");
+assert.equal(naturalMetadata.company, "Acme Health");
+assert.equal(naturalMetadata.titleConfidence, "medium");
+assert.equal(naturalMetadata.companyConfidence, "medium");
+const contractMetadata = extractMetadata(`Example Talent Solutions is hiring a Machine Learning Engineer for a six-month contract-to-hire engagement. This team builds data products.`);
+assert.equal(contractMetadata.title, "Machine Learning Engineer");
+assert.equal(contractMetadata.company, "Example Talent Solutions");
+
+const labelledMetadata = extractMetadata(`Company: Northstar Labs\nJob title: Senior Data Engineer\nBuild reliable data pipelines and production services.`);
+assert.equal(labelledMetadata.title, "Senior Data Engineer");
+assert.equal(labelledMetadata.company, "Northstar Labs");
+assert.equal(labelledMetadata.titleConfidence, "high");
+
+const intermediaryMetadata = extractMetadata(`Our client is seeking a Software Engineer to build APIs and production services. The ideal candidate collaborates with product and engineering teams.`);
+assert.equal(intermediaryMetadata.company, null);
+assert.equal(intermediaryMetadata.title, "Software Engineer");
+
+const titleFallback = extractMetadata(`Build production APIs, services, and reliable applications with the engineering team.`, {pageTitle:"Platform Engineer | Example Careers"});
+assert.equal(titleFallback.title, "Platform Engineer");
 console.log("JD X-ray engine tests passed.");

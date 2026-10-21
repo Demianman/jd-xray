@@ -22,10 +22,11 @@
       <div class="section-heading"><div><p class="eyebrow">Try it on a real posting</p><h2>What is this JD not saying plainly?</h2></div><p>Results are risk signals, not accusations. Every conclusion points back to the text so you can judge it yourself.</p></div>
       <div class="workbench">
         <form id="jd-form" class="input-panel">
-          <div class="field-row"><label>Role title<input name="title" placeholder="Machine Learning Engineer"></label><label>Company <span>optional</span><input name="company" placeholder="Company name"></label></div>
+          <div class="paste-head"><div><p class="eyebrow">One required input</p><h3>Paste the JD. We’ll find the rest.</h3></div><span>Company and title are extracted automatically.</span></div>
           <label>Full job description<textarea name="jd" rows="18" minlength="100" placeholder="Paste the complete job description here…" required></textarea></label>
+          <details class="metadata-override"><summary>Correct company or title <span>only if needed</span></summary><div class="field-row"><label>Role title<input name="title" placeholder="Auto-detect"></label><label>Company<input name="company" placeholder="Auto-detect"></label></div></details>
           <details class="expectations"><summary>Optional: my expectations</summary><div><label>Minimum acceptable annual base salary<input name="expectedAnnual" type="number" min="0" step="1000" placeholder="120000"></label><p>Used only to flag a posted range below your floor. It stays in this browser.</p></div></details>
-          <div class="form-actions"><button type="button" class="button" id="sample">Use a revealing sample</button><button class="button primary" type="submit">Read between the lines →</button></div>
+          <div class="form-actions stacked-actions"><button type="button" class="button" id="sample">Use a revealing sample</button><div><button type="button" class="button" id="clipboard">Paste clipboard + analyze</button><button class="button primary" type="submit">Analyze this JD →</button></div></div>
         </form>
         <section id="report" class="report empty-report" aria-live="polite"><div><span>↳</span><h3>Your report will appear here.</h3><p>Start with one real JD. You do not need to describe yourself first.</p></div></section>
       </div>
