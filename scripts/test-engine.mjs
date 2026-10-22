@@ -66,4 +66,28 @@ const conflictFindings = repeatedConflict.findings.filter(item => item.category 
 assert.equal(conflictFindings.length, 1);
 assert.equal(conflictFindings[0].status, "conflict");
 assert.equal(repeatedConflict.workAuthorization, "conflict");
+
+const forwardDeployed = analyzeJD(`Forward Deployed AI Engineer – Agents & Research Systems
+MaxIT Consulting - Max Corporate Group
+San Francisco, California, United States | Full-Time | On-Site
+
+We are seeking a highly technical Forward Deployed AI Engineer – Agents & Research Systems to build and deploy advanced agent systems for large enterprise environments.
+This role combines strong software engineering with applied AI research judgment. You will work directly with technically sophisticated customers while building agent systems, data pipelines, post-training workflows, and evaluation infrastructure required for production deployments.
+- Run and analyze post-training workflows for customer-specific models and agents.
+- Work directly with customer researchers and engineers.
+- Translate customer workflows into robust, testable AI systems.
+- Own technical deployments from implementation through production use.
+The search is open from exceptional new graduates and early-career engineers through experienced senior engineers. Technical ability and demonstrated ownership are more important than years of experience.
+The team is based in San Francisco and strongly prefers in-person collaboration. Limited flexibility may be considered for exceptional candidates, particularly experienced candidates elsewhere in the United States who can spend an initial period working on site.
+Join Our Global Talent Network: Explore opportunities across IT, SAP, engineering, corporate functions and other specialized professional areas. If you don't see the right opportunity today, submit your CV to join our talent network and be considered for future searches.`);
+assert.equal(forwardDeployed.metadata.title, "Forward Deployed AI Engineer – Agents & Research Systems");
+assert.equal(forwardDeployed.metadata.company, "MaxIT Consulting - Max Corporate Group");
+assert(!forwardDeployed.findings.some(item => item.category === "title_mismatch"));
+assert(forwardDeployed.findings.some(item => item.category === "staffing" && item.weight === 3));
+assert(forwardDeployed.findings.some(item => item.category === "role_shape"));
+assert(forwardDeployed.findings.some(item => item.category === "work_arrangement"));
+assert(forwardDeployed.findings.some(item => item.category === "seniority"));
+assert(forwardDeployed.omissions.includes("Legal employer and direct-hire vs contract relationship"));
+assert(forwardDeployed.omissions.includes("OPT / STEM OPT / future sponsorship policy"));
+assert.match(forwardDeployed.bottomLine, /recruiter-managed search or talent-pool/i);
 console.log("JD X-ray engine tests passed.");

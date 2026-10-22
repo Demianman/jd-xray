@@ -5,6 +5,7 @@ const SIGNALS = {
     {pattern: /our client|client is seeking|on behalf of (?:our|a) client/i, label: "The employer may be a recruiting intermediary rather than the workplace itself.", weight: 3},
     {pattern: /(?:w2|1099|corp[ -]?to[ -]?corp|c2c)|contract[- ]to[- ]hire|staffing (?:firm|agency)/i, label: "Contract or staffing-agency language appears in the posting.", weight: 3},
     {pattern: /submit (?:your )?resume|recruiting team|talent solutions/i, label: "The application language resembles a third-party recruiting workflow.", weight: 1},
+    {pattern: /global talent network|join (?:our|the) talent network|considered for future (?:roles|searches|opportunities)/i, label: "This may be a recruiter-managed search or talent-pool posting rather than a clearly identified open role.", weight: 3},
   ],
   pressure: [
     {pattern: /fast[- ]paced|high[- ]velocity|rapidly changing|sense of urgency/i, label: "The employer explicitly emphasizes speed or rapid change.", weight: 1},
@@ -17,6 +18,12 @@ const SIGNALS = {
     {pattern: /end[- ]to[- ]end ownership|from concept to production|own .* roadmap/i, label: "The role expects broad end-to-end ownership.", weight: 2},
     {pattern: /other duties as assigned|responsibilities may change|including but not limited to/i, label: "The scope is intentionally open-ended.", weight: 1},
     {pattern: /travel (?:up to )?(\d{1,2})%|up to (\d{1,2})% travel/i, label: "The role includes material travel.", weight: 2},
+  ],
+  work_arrangement: [
+    {pattern: /strongly prefers? in[- ]person|primarily on[- ]site|initial period (?:working )?on[- ]site|limited flexibility may be considered/i, label: "On-site work appears to be the default; flexibility is framed as an exception.", weight: 2},
+  ],
+  seniority: [
+    {pattern: /(?:new graduates?|early[- ]career).{0,100}(?:senior|experienced)|(?:senior|experienced).{0,100}(?:new graduates?|early[- ]career)/i, label: "The search spans unusually broad seniority, so level, pay band, and support may not be settled.", weight: 2},
   ],
   authorization: [
     {pattern: /(?:no|without|not (?:available|offered|provided)).{0,24}sponsorship|will not sponsor|cannot sponsor/i, label: "The posting explicitly limits sponsorship.", weight: 3, status: "conflict"},
@@ -49,6 +56,7 @@ const WORK = {
 };
 
 const TITLE_EXPECTATIONS = [
+  {pattern: /forward[- ]deployed/i, expected: ["customer", "software"], label: "customer-facing deployment engineering"},
   {pattern: /machine learning|\bml\b|applied scientist|data scientist/i, expected: ["model", "research"], label: "ML/model development"},
   {pattern: /software engineer|developer/i, expected: ["software"], label: "software engineering"},
   {pattern: /data engineer/i, expected: ["data", "software"], label: "data engineering"},
@@ -59,8 +67,15 @@ const TITLE_EXPECTATIONS = [
 const money = String.raw`(?:\$|USD\s*)?(\d{2,3}(?:,\d{3})?(?:\.\d{1,2})?)([kK]?)`;
 const rangePattern = new RegExp(`${money}\\s*(?:-|–|—|to)\\s*${money}\\s*(?:per\\s+|\\/)?(hour|hr|year|yr|annum|annual)?`, "ig");
 
-function clean(text) { return String(text || "").replace(/\s+/g, " ").trim(); }
-function sentences(text) { return String(text || "").replace(/\bU\.S\./gi, "US").split(SENTENCE_SPLIT).map(clean).filter(s => s.length >= 12 && s.length <= 700); }
+function normalizeText(text) {
+  return String(text || "")
+    .replace(/&#x20;|&#32;|&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\\\s*\n/g, "\n")
+    .replace(/^[ \t]*-\s+/gm, "- ");
+}
+function clean(text) { return normalizeText(text).replace(/\s+/g, " ").trim(); }
+function sentences(text) { return normalizeText(text).replace(/\bU\.S\./gi, "US").split(SENTENCE_SPLIT).map(clean).filter(s => s.length >= 12 && s.length <= 700); }
 function uniq(items) { return [...new Set(items)]; }
 
 function tidyEntity(value) {
@@ -73,7 +88,7 @@ function plausibleTitle(value) {
 }
 
 export function extractMetadata(text, options = {}) {
-  const raw = String(text || "").replace(/\r/g, "");
+  const raw = normalizeText(text).replace(/\r/g, "");
   const lines = raw.split("\n").map(clean).filter(Boolean).slice(0, 80);
   let title = tidyEntity(options.title || ""), company = tidyEntity(options.company || "");
   let titleConfidence = title ? "confirmed" : "unavailable", companyConfidence = company ? "confirmed" : "unavailable";
@@ -98,6 +113,14 @@ export function extractMetadata(text, options = {}) {
       const candidate = tidyEntity(labelled?.[1] || about?.[1] || atCompany?.[1] || companyIs?.[1] || join?.[1] || "");
       if (candidate && !/^(our client|the company|company|we)$/i.test(candidate) && candidate.split(/\s+/).length <= 10) { company = candidate; companyConfidence = labelled || about ? "high" : "medium"; companyEvidence = line; break; }
     }
+  }
+  if (!company && title && lines.length > 1) {
+    const titleIndex = lines.findIndex(line => tidyEntity(line) === title);
+    const nearby = lines.slice(Math.max(0, titleIndex + 1), titleIndex + 4).find(line =>
+      /\b(?:consulting|group|technologies|labs?|systems?|solutions?|health|pharma|biotech|inc\.?|corp\.?|llc)\b/i.test(line) &&
+      !/\b(?:full[- ]time|part[- ]time|on[- ]site|remote|hybrid|california|united states)\b/i.test(line)
+    );
+    if (nearby) { company = tidyEntity(nearby); companyConfidence = "medium"; companyEvidence = nearby; }
   }
   if (!title && options.pageTitle) {
     const parts = String(options.pageTitle).split(/\s+[|·–—-]\s+/);
@@ -124,7 +147,7 @@ function consolidateFindings(findings) {
     const key = finding.category === "authorization" ? "authorization" : `${finding.category}|${finding.title}|${finding.status || ""}`;
     const existing = grouped.get(key);
     if (!existing) {
-      grouped.set(key, {...finding, evidenceItems: [finding.evidence]});
+      grouped.set(key, {...finding, evidenceItems: finding.evidenceItems || [finding.evidence]});
       continue;
     }
     if (!existing.evidenceItems.includes(finding.evidence) && existing.evidenceItems.length < 3) existing.evidenceItems.push(finding.evidence);
@@ -214,6 +237,30 @@ function structuralFindings(text, allSentences, compensation) {
   return findings;
 }
 
+function roleShapeFindings(title, allSentences, work) {
+  if (!/forward[- ]deployed/i.test(title) || (work.shares.customer || 0) < 20) return [];
+  const evidenceItems = allSentences.filter(sentence => /work directly with|customer[- ]specific|customer workflows?|technical deployments?|forward[- ]deployed/i.test(sentence)).slice(0, 3);
+  if (!evidenceItems.length) return [];
+  return [{category:"role_shape", severity:"medium", weight:2, title:"This is a customer-facing deployment role; research judgment supports delivery rather than defining a primarily independent research job.", evidence:evidenceItems.join("\n"), evidenceItems}];
+}
+
+function detectOmissions(text, compensation) {
+  const omissions = [];
+  if (!compensation) omissions.push("Approved base-pay range");
+  if (!/sponsorship|work authorization|authorized to work|\bvisas?\b|\bf[ -]?1\b|\b(?:stem[ -]?)?opt\b/i.test(text)) omissions.push("OPT / STEM OPT / future sponsorship policy");
+  if (/talent network|future searches|our client|consulting/i.test(text) && !/direct hire|employer of record|contract[- ]to[- ]hire|\bw-?2\b|\b1099\b/i.test(text)) omissions.push("Legal employer and direct-hire vs contract relationship");
+  if (!/travel|on[- ]call|after[- ]hours/i.test(text) && /customer|client|forward[- ]deployed/i.test(text)) omissions.push("Travel and after-hours customer support expectations");
+  return omissions;
+}
+
+function bottomLine(metadata, findings, work) {
+  const parts = [];
+  if (findings.some(f => f.category === "staffing" && f.weight >= 3)) parts.push("This looks like a recruiter-managed search or talent-pool listing, so the actual employer and live headcount need confirmation.");
+  if (/forward[- ]deployed/i.test(metadata.title || "") && (work.shares.customer || 0) >= 20) parts.push("The job is fundamentally customer-facing AI deployment, with research and engineering used to deliver customer-specific systems.");
+  if (findings.some(f => f.category === "work_arrangement")) parts.push("San Francisco on-site work appears to be the default, while flexibility is reserved for exceptions.");
+  return parts.join(" ") || "The posting provides some useful evidence, but important employment conditions still need confirmation before you invest heavily in the process.";
+}
+
 function summarize(work, title) {
   const labels = {model: "model development", software: "software engineering", data: "data/pipelines", customer: "customer delivery", product: "product/stakeholder work", operations: "operations/support", research: "research", regulated: "regulated-domain work"};
   const top = Object.entries(work.shares).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]).slice(0,3);
@@ -221,37 +268,43 @@ function summarize(work, title) {
   return `The posting reads primarily as ${top.map(([k,v]) => `${labels[k]} (${v}%)`).join(", ")}. These percentages describe emphasis in the text, not guaranteed time allocation.`;
 }
 
-function questions(findings, work, compensation) {
+function questions(findings, work, compensation, omissions) {
   const result = [];
   if (findings.some(f => f.category === "title_mismatch")) result.push("How is a typical week divided between the work implied by the title and the other responsibilities listed here?");
-  if (findings.some(f => f.category === "staffing")) result.push("Is this employment directly with the named company, and who would be the legal employer of record?");
+  if (findings.some(f => f.category === "staffing")) result.push("Is this a currently funded requisition or a talent-pool search, who is the actual client, and who would be the legal employer of record?");
+  if (findings.some(f => f.category === "work_arrangement")) result.push("How many days per week are mandatory in San Francisco, and what does the initial on-site period mean in practice?");
+  if (findings.some(f => f.category === "seniority")) result.push("Which level and pay band is this opening actually approved for, and what mentorship or delivery support would an early-career hire receive?");
   if (findings.some(f => f.category === "pressure")) result.push("What usually causes work outside normal hours, and how often did that happen for this team in the last quarter?");
   if ((work.shares.customer || 0) >= 30) result.push("How much of the role is customer implementation, support, or pre-sales versus building the core product?");
   if (findings.some(f => f.category === "authorization")) result.push("Can recruiting confirm the policy for F-1 OPT, STEM OPT, and future H-1B sponsorship for this specific requisition?");
   if (findings.some(f => f.category === "export_control")) result.push("Which exact export-control or clearance condition applies, and is U.S.-person status a legal requirement for this role?");
   if (findings.some(f => f.category === "posting_quality")) result.push("Can you share the official employer careers-page posting and confirm this is an actively staffed requisition?");
   if (!compensation) result.push("What is the approved base-salary range for this location, excluding bonus and equity?");
-  return uniq(result).slice(0, 5);
+  if (omissions.includes("OPT / STEM OPT / future sponsorship policy")) result.push("Can the legal employer support F-1 OPT, sign a STEM OPT training plan, and consider future H-1B sponsorship for this requisition?");
+  return uniq(result).slice(0, 6);
 }
 
 export function analyzeJD(text, options = {}) {
-  if (clean(text).length < 100) throw new Error("Paste a fuller job description so the analysis has enough context.");
-  const allSentences = sentences(text);
-  const metadata = extractMetadata(text, options);
+  const normalizedText = normalizeText(text);
+  if (clean(normalizedText).length < 100) throw new Error("Paste a fuller job description so the analysis has enough context.");
+  const allSentences = sentences(normalizedText);
+  const metadata = extractMetadata(normalizedText, options);
   const work = classifyWork(allSentences);
   const findings = Object.entries(SIGNALS).flatMap(([category, rules]) => findSignals(allSentences, rules, category));
   const mismatch = titleMismatch(metadata.title || "", work);
   if (mismatch) findings.push(mismatch);
-  const compensation = parseCompensation(text);
+  findings.push(...roleShapeFindings(metadata.title || "", allSentences, work));
+  const compensation = parseCompensation(normalizedText);
   const qualifications = parseQualifications(allSentences);
-  findings.push(...structuralFindings(text, allSentences, compensation));
+  findings.push(...structuralFindings(normalizedText, allSentences, compensation));
   const expectedAnnual = Number(options.expectedAnnual || 0);
   if (compensation && expectedAnnual && compensation.annualHigh < expectedAnnual) findings.push({category: "compensation", severity: "high", weight: 3, title: `Even the top of the posted range is below your $${expectedAnnual.toLocaleString()} minimum.`, evidence: compensation.source});
   const consolidated = consolidateFindings(findings);
   const auth = consolidated.filter(f => f.category === "authorization" || f.category === "export_control");
   const workAuthorization = auth.some(f => f.status === "conflict") ? "conflict" : auth.some(f => f.status === "available") ? "available" : auth.length ? "review" : "not_stated";
   const ordered = consolidated.sort((a,b) => b.weight - a.weight || a.category.localeCompare(b.category));
-  return {version: 1, metadata, summary: summarize(work, metadata.title), work, qualifications, findings: ordered, compensation, expectedAnnual: expectedAnnual || null, workAuthorization, h1b: {status: "not_checked", note: "Employer filing history is not checked in this local prototype. Past filings would not prove sponsorship for this role."}, questions: questions(ordered, work, compensation), caveat: "This report identifies evidence-backed risk signals in the posting. It does not verify the employer, predict working conditions, or provide legal advice."};
+  const omissions = detectOmissions(normalizedText, compensation);
+  return {version: 2, metadata, bottomLine: bottomLine(metadata, ordered, work), summary: summarize(work, metadata.title), work, qualifications, findings: ordered, omissions, compensation, expectedAnnual: expectedAnnual || null, workAuthorization, h1b: {status: "not_checked", note: "Employer filing history is not checked in this local prototype. Past filings would not prove sponsorship for this role."}, questions: questions(ordered, work, compensation, omissions), caveat: "This report identifies evidence-backed risk signals in the posting. It does not verify the employer, predict working conditions, or provide legal advice."};
 }
 
 export { parseCompensation };
