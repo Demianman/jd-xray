@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {analyzeJD, extractMetadata, parseCompensation} from "../dist/engine.js";
+import {analyzeJD, extractMetadata, parseCompensation} from "../public/engine.js";
 
 const revealing = `Our client is seeking a Machine Learning Engineer for a contract-to-hire engagement in a fast-paced environment. You will partner with sales, run customer demonstrations, lead client implementations, resolve support tickets, build dashboards, and maintain data pipelines. You may occasionally prototype machine-learning features. This role participates in an after-hours on-call rotation. Applicants must be authorized to work in the United States without current or future sponsorship. Compensation: $42-$50 per hour.`;
 const result = analyzeJD(revealing, {title:"Machine Learning Engineer", expectedAnnual:120000});

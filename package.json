@@ -1,0 +1,10 @@
+{
+  "name": "jd-xray-public-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-worker.mjs",
+    "test": "node scripts/test-engine.mjs && node scripts/test-worker.mjs && node scripts/verify-public.mjs",
+    "preview": "node scripts/preview-worker.mjs"
+  }
+}

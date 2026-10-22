@@ -6,6 +6,7 @@ const labels = {model:"Model development",software:"Software engineering",data:"
 const categories = {staffing:"Who is hiring",pressure:"Work intensity",scope:"Scope",work_arrangement:"Work arrangement",seniority:"Level clarity",role_shape:"What the role really is",authorization:"Work authorization",export_control:"Export control",posting_quality:"Posting quality",title_mismatch:"Title mismatch",compensation:"Compensation"};
 const money = value => new Intl.NumberFormat("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0}).format(value);
 const emptyReport = `<div><span>↳</span><h3>Your report will appear here.</h3><p>Start with one real JD. You do not need to describe yourself first.</p></div>`;
+const safeUrl = value => { try { const url = new URL(value); return ["http:","https:"].includes(url.protocol) ? url.href : null; } catch { return null; } };
 
 function render(result, meta) {
   const detected = result.metadata;
@@ -21,15 +22,49 @@ function render(result, meta) {
   const omissions = result.omissions?.length ? `<section class="unknowns"><p class="eyebrow">What the posting still does not tell you</p><div>${result.omissions.map(item => `<span>${esc(item)}</span>`).join("")}</div><p>Missing information is not automatically a red flag, but it should not be silently filled in.</p></section>` : "";
   $("#report").className = "report";
   const identity = `<div class="detected-meta"><span><b>${detected.title ? "Detected title" : "Title unavailable"}</b>${esc(detected.title || "Not confidently found")}${detected.title ? `<i>${esc(detected.titleConfidence)} confidence</i>` : ""}</span><span><b>${detected.company ? "Detected company" : "Company unavailable"}</b>${esc(detected.company || "Not confidently found")}${detected.company ? `<i>${esc(detected.companyConfidence)} confidence</i>` : ""}</span></div>`;
-  $("#report").innerHTML = `<div class="report-head"><div><p class="eyebrow">JD X-ray report</p><h3>${esc(detected.title || "Role title not confirmed")}</h3><p>${esc(detected.company || "Company not confirmed")}</p></div><span class="signal-count ${high ? "alert" : ""}">${esc(verdict)}</span></div>${identity}<section class="bottom-line"><p class="eyebrow">Bottom line</p><h4>${esc(result.bottomLine)}</h4></section><section class="plain-read"><p class="eyebrow">What the work appears to be</p><h4>${esc(result.summary)}</h4><div class="work-bars">${shares.map(([key,value]) => `<div><span>${esc(labels[key] || key)}</span><i><b style="width:${value}%"></b></i><strong>${value}%</strong></div>`).join("")}</div></section>${qualifications}${compensation}${omissions}<section><div class="report-section-title"><p class="eyebrow">What deserves a closer look</p><span>${result.findings.length} evidence-backed finding${result.findings.length===1?"":"s"}</span></div><div class="findings">${findings}</div></section><section class="questions"><p class="eyebrow">Questions worth asking</p><ol>${result.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ol></section><section class="h1b-note"><div><b>H-1B employer history</b><p>${esc(result.h1b.note)}</p></div><span>Not checked yet</span></section><p class="caveat">${esc(result.caveat)}</p>`;
+  $("#report").innerHTML = `<div class="report-head"><div><p class="eyebrow">JD X-ray report</p><h3>${esc(detected.title || "Role title not confirmed")}</h3><p>${esc(detected.company || "Company not confirmed")}</p></div><span class="signal-count ${high ? "alert" : ""}">${esc(verdict)}</span></div>${identity}<section id="deep-review" class="deep-review loading"><div><p class="eyebrow">AI + external verification</p><h4>Checking semantics, source history, and employer signals…</h4><p>The local evidence report is already available below.</p></div></section><section class="bottom-line"><p class="eyebrow">Local text analysis</p><h4>${esc(result.bottomLine)}</h4></section><section class="plain-read"><p class="eyebrow">What the work appears to be</p><h4>${esc(result.summary)}</h4><div class="work-bars">${shares.map(([key,value]) => `<div><span>${esc(labels[key] || key)}</span><i><b style="width:${value}%"></b></i><strong>${value}%</strong></div>`).join("")}</div></section>${qualifications}${compensation}${omissions}<section><div class="report-section-title"><p class="eyebrow">What deserves a closer look</p><span>${result.findings.length} evidence-backed finding${result.findings.length===1?"":"s"}</span></div><div class="findings">${findings}</div></section><section class="questions"><p class="eyebrow">Questions worth asking</p><ol>${result.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ol></section><section class="h1b-note"><div><b>H-1B employer history</b><p>${esc(result.h1b.note)}</p></div><span>Not checked locally</span></section><p class="caveat">${esc(result.caveat)}</p>`;
   document.querySelectorAll(".copy-evidence").forEach((button,index) => button.onclick = async () => { await navigator.clipboard.writeText((result.findings[index].evidenceItems || [result.findings[index].evidence]).join("\n\n")); button.textContent = "Copied"; setTimeout(() => button.textContent = "Copy evidence", 1200); });
+}
+
+function aiFinding(finding) {
+  const sources = (finding.sources || []).map(source => {
+    const url = safeUrl(source.url);
+    return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(source.title || new URL(url).hostname)}</a>` : "";
+  }).filter(Boolean).join("");
+  const evidence = (finding.evidence || []).map(item => `<span>“${esc(item)}”</span>`).join("");
+  return `<article class="ai-finding"><div><span>${esc(finding.topic)}</span><b>${esc(finding.verification.replaceAll("_", " "))}</b></div><h5>${esc(finding.claim)}</h5>${evidence ? `<blockquote>${evidence}</blockquote>` : ""}${sources ? `<nav>${sources}</nav>` : ""}${finding.query_scope ? `<small>Scope: ${esc(finding.query_scope)}</small>` : ""}</article>`;
+}
+
+async function runDeepAnalysis(jd, sourceUrl) {
+  const panel = $("#deep-review");
+  try {
+    const response = await fetch("/api/analyze-jd", {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({jd, source_url:sourceUrl || null})});
+    const payload = await response.json();
+    if (!response.ok || !payload.available) {
+      panel.className = "deep-review unavailable";
+      panel.innerHTML = `<div><p class="eyebrow">Local analysis only</p><h4>AI and external verification are not configured yet.</h4><p>${esc(payload.message || "The evidence-backed local report remains available below.")}</p></div>`;
+      return;
+    }
+    const report = payload.report;
+    const stated = report.from_jd;
+    const identity = stated.actual_employer_disclosed ? `Actual employer: ${stated.actual_employer || "named"}` : "Actual employer/client is not disclosed";
+    const missing = stated.missing_sections.length ? `<div class="ai-missing">${stated.missing_sections.map(item => `<span>${esc(item)}</span>`).join("")}</div>` : "";
+    const jdFindings = stated.findings.map(aiFinding).join("");
+    const external = report.external_checks.findings.map(aiFinding).join("");
+    panel.className = "deep-review ready";
+    panel.innerHTML = `<div class="deep-head"><div><p class="eyebrow">AI reading + sourced checks</p><h4>${esc(stated.summary)}</h4><p>${esc(identity)} · ${esc(stated.posting_type.replaceAll("_", " "))}</p></div><span>${esc(report.external_checks.status)}</span></div>${missing}<div class="ai-columns"><section><h5>From the JD</h5>${jdFindings || `<p class="muted">No additional semantic finding.</p>`}</section><section><h5>Verified externally</h5>${external || `<p class="muted">No externally verified finding was returned. This is not evidence that none exist.</p>`}</section></div><p class="ai-caveat">${esc(report.caveats.join(" "))}</p>`;
+  } catch {
+    panel.className = "deep-review unavailable";
+    panel.innerHTML = `<div><p class="eyebrow">Local analysis only</p><h4>External verification could not run.</h4><p>The local evidence report remains available; no external fact has been inferred.</p></div>`;
+  }
 }
 
 $("#jd-form").onsubmit = event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const meta = {title:String(form.get("title") || "").trim(), company:String(form.get("company") || "").trim(), expectedAnnual:Number(form.get("expectedAnnual") || 0)};
-  try { render(analyzeJD(form.get("jd"), meta), meta); $("#report").scrollIntoView({behavior:"smooth",block:"start"}); }
+  const jd = String(form.get("jd") || "");
+  try { render(analyzeJD(jd, meta), meta); runDeepAnalysis(jd, String(form.get("sourceUrl") || "").trim()); $("#report").scrollIntoView({behavior:"smooth",block:"start"}); }
   catch (error) { $("#report").className = "report error-report"; $("#report").innerHTML = `<div><h3>Not enough to inspect yet.</h3><p>${esc(error.message)}</p></div>`; }
 };
 

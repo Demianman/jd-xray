@@ -13,17 +13,19 @@ and `storage`; it reads the active page only after the visitor clicks the extens
 - Findings are explainable risk signals, not employer or workplace verification.
 - Work-mix percentages measure emphasis in the posting, not guaranteed time allocation.
 - Hourly/annual conversion uses 2,080 hours and does not include bonus, equity, overtime, or unpaid time.
-- Employer H-1B history is deliberately marked unavailable until legal-entity matching and official
-  disclosure-data ingestion are implemented.
-- The local prototype does not use a hosted language model. It makes higher-order deductions from
-  combinations of responsibilities and employment terms, with the triggering sentences attached.
+- Local H-1B history remains unavailable until legal-entity matching and official disclosure-data
+  ingestion are implemented. Deep analysis may report only scoped, sourced external checks.
+- The Worker can call the OpenAI Responses API with Structured Outputs and web search when
+  `OPENAI_API_KEY` is configured. Without it, the product degrades explicitly to local analysis.
+- External search absence is never presented as proof that an employer has no filings or that a role
+  does not exist.
 
 ## Run and verify
 
 ```bash
-python3 -m http.server 4173 --directory dist
-node scripts/test-engine.mjs
-node scripts/verify-public.mjs
+npm run build
+npm test
+npm run preview
 ```
 
 The hosted site is a separate public project and cannot read the private Career OS backend.

@@ -9,6 +9,7 @@ private repository. Only the files in this repository may be published.
 - synthetic companies, roles, scores, and explanations;
 - generic descriptions of deterministic routing and evidence-aware decisions;
 - browser-local demo interactions;
+- server-side analysis of user-submitted public job-description text and an optional public source URL;
 - a browser extension that reads only the active page after an explicit user click.
 
 ## Prohibited
@@ -25,6 +26,16 @@ private repository. Only the files in this repository may be published.
 The prototype is intentionally limited to `activeTab`, `scripting`, `sidePanel`, and `storage`.
 It does not request persistent access to every site, browsing history, identity, or downloads. Page
 text is analyzed locally in the extension and is not retained by the extension.
+
+## Hosted deep analysis
+
+The website always runs deterministic checks in the browser. When hosted deep analysis is enabled,
+the pasted job description and optional public source URL are sent to the Site's same-origin Worker,
+which may send them to the configured model and web-search provider. The request must not include a
+resume, personal profile, contact details, application answers, or private documents. Model requests
+set storage off. Results may be cached by a one-way content hash for up to six hours; the cache key
+does not contain the readable JD. API credentials remain server-side environment secrets and are
+never included in browser assets.
 
 ## Before every publication
 
