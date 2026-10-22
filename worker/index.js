@@ -209,7 +209,7 @@ function assetResponse(pathname) {
   if (!asset) return null;
   const headers = {
     "content-type": asset.type,
-    "cache-control": path === "/index.html" ? "no-cache" : "public, max-age=3600",
+    "cache-control": /\.(?:html|js|css)$/.test(path) ? "no-cache" : "public, max-age=3600",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
     "content-security-policy": "default-src 'self'; connect-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'"
