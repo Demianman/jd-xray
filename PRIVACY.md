@@ -37,6 +37,12 @@ set storage off. Results may be cached by a one-way content hash for up to six h
 does not contain the readable JD. API credentials remain server-side environment secrets and are
 never included in browser assets.
 
+Deep analysis runs only after the visitor explicitly selects **Run Deep Check**. When enabled, the
+Worker uses a signed, HttpOnly anonymous quota cookie and a one-way network identifier to apply
+abuse controls; the readable IP address is not placed in the cookie or report. Reusing a cached
+result does not consume the browser's daily allowance. Public AI access may additionally require
+server-verified bot protection.
+
 ## Before every publication
 
 Run `node scripts/verify-public.mjs`, inspect `git diff --check`, and review the exact tracked-file

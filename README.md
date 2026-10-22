@@ -16,7 +16,13 @@ and `storage`; it reads the active page only after the visitor clicks the extens
 - Local H-1B history remains unavailable until legal-entity matching and official disclosure-data
   ingestion are implemented. Deep analysis may report only scoped, sourced external checks.
 - The Worker can call the OpenAI Responses API with Structured Outputs and web search when
-  `OPENAI_API_KEY` is configured. Without it, the product degrades explicitly to local analysis.
+  `OPENAI_API_KEY` is configured. Public activation also requires `JD_XRAY_SESSION_SECRET`; optional
+  `TURNSTILE_SECRET_KEY` verification is enforced when configured. Without the required secrets,
+  the product degrades explicitly to local analysis.
+- Deep analysis is an explicit click, not an automatic side effect of pasting a JD. Successful
+  uncached requests use a signed anonymous daily allowance; cached results do not consume it.
+- The in-memory network window is an abuse-friction layer, not a global billing guarantee. A
+  provider-side project spend cap and bot protection are still required before broad public access.
 - External search absence is never presented as proof that an employer has no filings or that a role
   does not exist.
 
