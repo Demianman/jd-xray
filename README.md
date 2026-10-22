@@ -4,6 +4,19 @@ A privacy-safe, standalone job-description inspector. Visitors can paste a real 
 an evidence-backed read on the work mix, staffing or contract signals, work-intensity language,
 title–scope mismatch, work-authorization wording, compensation, and recruiter questions.
 
+## What works now
+
+- one-click local JD analysis with no account;
+- automatic company/title extraction and evidence-backed risk signals;
+- compensation normalization between hourly and annual pay;
+- explicit unknowns and recruiter questions instead of fabricated answers;
+- optional server-side Deep Check architecture with signed anonymous quotas, caching, network
+  throttling, concurrency protection, and an optional Turnstile verification hook;
+- a downloadable Chrome/Edge side-panel prototype.
+
+The public demo currently keeps Deep Check disabled until a model provider and production abuse
+controls are configured. Local analysis remains fully usable.
+
 The primary flow requires no account and no personal profile. A Chrome/Edge Manifest V3 side-panel
 prototype is published as a downloadable ZIP. It requests only `activeTab`, `scripting`, `sidePanel`,
 and `storage`; it reads the active page only after the visitor clicks the extension.
