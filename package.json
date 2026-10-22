@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-worker.mjs",
-    "test": "node scripts/test-engine.mjs && node scripts/test-worker.mjs && node scripts/verify-public.mjs",
+    "test": "node scripts/test-engine.mjs && node scripts/test-extension-ai.mjs && node scripts/test-worker.mjs && node scripts/verify-public.mjs",
     "preview": "node scripts/preview-worker.mjs"
   }
 }

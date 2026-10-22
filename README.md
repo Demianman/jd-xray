@@ -50,7 +50,9 @@ pretending the text proves more than it does.**
 - identifies important omissions instead of silently filling them in;
 - normalizes hourly and annual compensation using a visible assumption;
 - produces targeted questions for the recruiter or hiring manager;
-- ships a downloadable Chrome/Edge side-panel prototype for analyzing a posting in context.
+- ships a downloadable Chrome/Edge side-panel prototype for analyzing a posting in context;
+- lets extension users optionally connect their own OpenAI, OpenRouter, or Groq API key for a
+  user-triggered semantic read without leaving the job page;
 - includes a separate opportunity explorer for route filtering, score comparison, and decision-detail inspection using synthetic data only.
 
 An optional **Deep Check** backend is designed for semantic model analysis and sourced web research.
@@ -63,6 +65,11 @@ The current local engine combines deterministic parsing with meaning-oriented ru
 must point back to sentences in the posting. Unknowns stay unknown. The extension reads the active
 page only after the user clicks it and requests only `activeTab`, `scripting`, `sidePanel`, and
 `storage`.
+
+For the BYOK extension prototype, keys are session-only and requests go directly from the extension
+background worker to a fixed provider allowlist. The job page cannot read the key. AI analysis runs
+only after an explicit click and is labeled as model interpretation rather than external
+verification. A ChatGPT Plus or Claude Pro subscription is not the same as API credit.
 
 The server-side Deep Check architecture supports structured model output, explicit user activation,
 signed anonymous quotas, caching, throttling, concurrency protection, and optional Turnstile

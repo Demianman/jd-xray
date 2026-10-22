@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "JD X-ray",
-  "version": "0.1.0",
-  "description": "Read the job behind the job post, with evidence-backed risk and compensation analysis.",
+  "version": "0.2.0",
+  "description": "Read the job behind the job post locally, with an optional bring-your-own-AI deep read.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
-  "background": {"service_worker": "service-worker.js"},
+  "host_permissions": ["https://api.openai.com/*", "https://openrouter.ai/*", "https://api.groq.com/*"],
+  "background": {"service_worker": "service-worker.js", "type": "module"},
   "action": {"default_title": "Analyze this job description"},
   "side_panel": {"default_path": "sidepanel.html"}
 }

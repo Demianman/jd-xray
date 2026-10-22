@@ -1,1 +1,30 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JD X-ray</title><link rel="stylesheet" href="sidepanel.css"></head><body><header><div><span>X</span><b>JD X-ray</b></div><button id="refresh" title="Analyze again">↻</button></header><main><section id="loading" class="state"><i></i><h1>Reading this page…</h1><p>Looking for the responsibilities, employment conditions, and evidence behind the wording.</p></section><section id="error" class="state hidden"><h1>Couldn’t read a JD here.</h1><p id="error-text"></p><button id="retry">Try again</button></section><section id="result" class="hidden"></section></main><footer>Runs locally · Only reads the active page after you click</footer><script type="module" src="sidepanel.js"></script></body></html>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JD X-ray</title>
+  <link rel="stylesheet" href="sidepanel.css">
+  <link rel="stylesheet" href="ai.css">
+</head>
+<body>
+  <header><div><span>X</span><b>JD X-ray</b></div><div class="header-actions"><button id="settings" title="Connect my AI">AI</button><button id="refresh" title="Analyze again">↻</button></div></header>
+  <main>
+    <section id="ai-settings" class="settings hidden">
+      <div class="settings-head"><div><p class="eyebrow">Bring your own AI</p><h2>Connect for this browser session</h2></div><button id="close-settings" aria-label="Close settings">×</button></div>
+      <p>Your key is stored in extension session memory, never injected into the job page, and cleared when the browser session ends.</p>
+      <label>Provider<select id="provider"><option value="openai">OpenAI API</option><option value="openrouter">OpenRouter</option><option value="groq">Groq</option></select></label>
+      <label>Model<input id="model" autocomplete="off"></label>
+      <label>API key<input id="api-key" type="password" autocomplete="off" placeholder="Stored for this session only"></label>
+      <div class="settings-actions"><button id="disconnect" class="quiet-button">Disconnect</button><button id="connect" class="primary-button">Save session connection</button></div>
+      <p id="connection-message" class="connection-message" aria-live="polite"></p>
+      <small>ChatGPT Plus or Claude Pro does not automatically include API credit. The provider charges your own API account.</small>
+    </section>
+    <section id="loading" class="state"><i></i><h1>Reading this page…</h1><p>Looking for the responsibilities, employment conditions, and evidence behind the wording.</p></section>
+    <section id="error" class="state hidden"><h1>Couldn’t read a JD here.</h1><p id="error-text"></p><button id="retry">Try again</button></section>
+    <section id="result" class="hidden"></section>
+  </main>
+  <footer id="privacy-status">Local check first · AI runs only when you click</footer>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>

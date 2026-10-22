@@ -2,7 +2,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const root=new URL("../",import.meta.url).pathname;
-const required=["README.md","PRIVACY.md",".openai/hosting.json","public/index.html","public/styles.css","public/app.js","public/engine.js","public/data.json","public/opportunities/index.html","public/opportunities/styles.css","public/opportunities/app.js","public/opportunities/data.json","public/extension/jd-xray-extension.zip","dist/server/index.js","dist/.openai/hosting.json","extension/manifest.json","extension/sidepanel.html","extension/sidepanel.js","extension/content.js","scripts/test-engine.mjs","scripts/test-worker.mjs"];
+const required=["README.md","PRIVACY.md",".openai/hosting.json","public/index.html","public/styles.css","public/app.js","public/engine.js","public/data.json","public/opportunities/index.html","public/opportunities/styles.css","public/opportunities/app.js","public/opportunities/data.json","public/extension/jd-xray-extension.zip","dist/server/index.js","dist/.openai/hosting.json","extension/manifest.json","extension/sidepanel.html","extension/sidepanel.js","extension/ai-provider.js","extension/content.js","scripts/test-engine.mjs","scripts/test-extension-ai.mjs","scripts/test-worker.mjs"];
 const forbidden=[
   /yiman/i,/wuyiman/i,/nelly/i,/demianman/i,/carnegie/i,/beone/i,/pittsburgh/i,
   /south-central university/i,/andrew\.cmu\.edu/i,/linkedin\.com\/in/i,

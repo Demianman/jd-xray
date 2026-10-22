@@ -23,9 +23,17 @@ private repository. Only the files in this repository may be published.
 
 ## Extension permissions
 
-The prototype is intentionally limited to `activeTab`, `scripting`, `sidePanel`, and `storage`.
-It does not request persistent access to every site, browsing history, identity, or downloads. Page
-text is analyzed locally in the extension and is not retained by the extension.
+The prototype's Chrome permissions are limited to `activeTab`, `scripting`, `sidePanel`, and
+`storage`. It does not request persistent access to every job site, browsing history, identity, or
+downloads. Page text is analyzed locally and is not retained by the extension.
+
+The optional **Connect my AI** prototype adds a fixed host allowlist for OpenAI, OpenRouter, and
+Groq API endpoints. It never accepts an arbitrary remote endpoint. The user must explicitly connect
+and explicitly run each AI read. The provider key is kept in `chrome.storage.session`, restricted to
+trusted extension contexts, and is cleared when the browser session ends. It is never inserted into
+the job page, shipped with the extension, or sent to this project's server. When the user runs the
+AI read, only the extracted JD text and its public source URL are sent directly from the extension
+background worker to the selected provider. Provider retention and billing policies still apply.
 
 ## Hosted deep analysis
 
