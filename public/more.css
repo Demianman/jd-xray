@@ -1,0 +1,19 @@
+.secondary-card {
+  display: block;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: inherit;
+  text-decoration: none;
+}
+
+.secondary-card.featured {
+  border-color: var(--green);
+  background: var(--green2);
+  transition: transform .15s ease;
+}
+
+.secondary-card.featured:hover {
+  transform: translateY(-2px);
+}

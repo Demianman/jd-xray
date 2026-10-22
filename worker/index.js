@@ -204,7 +204,7 @@ async function analyze(request, env) {
 }
 
 function assetResponse(pathname) {
-  const path = pathname === "/" ? "/index.html" : pathname;
+  const path = pathname === "/" ? "/index.html" : pathname === "/opportunities" || pathname === "/opportunities/" ? "/opportunities/index.html" : pathname;
   const asset = ASSETS[path];
   if (!asset) return null;
   const headers = {

@@ -6,6 +6,11 @@ assert.equal(home.status, 200);
 assert.match(home.headers.get("content-type"), /text\/html/);
 assert.match(await home.text(), /JD X-ray/);
 
+const opportunities = await worker.fetch(new Request("https://example.test/opportunities"), {}, {});
+assert.equal(opportunities.status, 200);
+assert.match(opportunities.headers.get("content-type"), /text\/html/);
+assert.match(await opportunities.text(), /Opportunity explorer/);
+
 const missingKey = await worker.fetch(new Request("https://example.test/api/analyze-jd", {
   method: "POST",
   headers: {"content-type": "application/json"},

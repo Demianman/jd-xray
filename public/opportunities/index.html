@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A privacy-safe opportunity explorer showing explainable job fit and routing decisions with synthetic data.">
+  <title>Opportunity explorer — JD X-ray</title>
+  <link rel="stylesheet" href="/opportunities/styles.css?v=1">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">X</span><span>JD X-ray</span><em>Opportunity explorer</em></a>
+    <nav><a href="/">Analyze a JD</a><a href="#queue">Explore jobs</a><a href="#method">How scoring works</a></nav>
+    <button id="theme" class="icon-button" type="button" aria-label="Toggle color theme">◐</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">A separate workspace, not a sign-up wall</p><h1>Find the next opportunity worth inspecting.</h1><p>Search and filter an explainable decision queue. Every score is paired with routing reasons, gaps, and evidence—never presented as a mysterious verdict.</p></div>
+      <aside><strong>Public-safe demonstration</strong><p>This page uses clearly synthetic companies, roles, and evidence. It contains no resume, contact information, application history, or private Career OS data.</p></aside>
+    </section>
+
+    <section class="snapshot" aria-label="Queue summary">
+      <div><span id="count-total">0</span><small>opportunities</small></div>
+      <div><span id="count-today">0</span><small>apply today</small></div>
+      <div><span id="count-tailor">0</span><small>tailor</small></div>
+      <div><span id="count-review">0</span><small>manual review</small></div>
+    </section>
+
+    <section id="queue" class="workspace">
+      <div class="section-heading"><div><p class="eyebrow">Synthetic opportunity queue</p><h2>Filter first. Inspect the reasoning second.</h2></div><p>This is the public product surface for browsing and comparing decisions. Personal matching stays outside the shipped dataset.</p></div>
+      <div class="toolbar">
+        <div class="segmented" id="route-filters" aria-label="Filter by route">
+          <button class="active" data-route="ALL">All</button><button data-route="TAILOR_AND_APPLY">Tailor</button><button data-route="FAST_APPLY">Fast apply</button><button data-route="MANUAL_REVIEW">Review</button><button data-route="SKIP">Skip</button>
+        </div>
+        <label class="search"><span>Search</span><input id="search" type="search" placeholder="Company, role, location, or lane…"></label>
+      </div>
+      <div class="queue-layout">
+        <div id="job-list" class="job-list" aria-live="polite"></div>
+        <aside id="detail" class="detail" aria-live="polite"><div class="detail-placeholder"><span>↗</span><h3>Select an opportunity</h3><p>Decision reasons, gaps, and traceable synthetic evidence will appear here.</p></div></aside>
+      </div>
+    </section>
+
+    <section id="method" class="method">
+      <div class="section-heading light"><div><p class="eyebrow">The boundary matters</p><h2>One product, two layers.</h2></div><p>JD X-ray interprets an individual posting. The explorer compares already evaluated opportunities. The private system may add personal evidence, but the public UI never invents or exposes it.</p></div>
+      <div class="method-grid"><article><b>01</b><h3>Inspect</h3><p>Read the JD for role shape, risk, eligibility, and missing information.</p></article><article><b>02</b><h3>Evaluate</h3><p>Calculate an explainable fit snapshot from available evidence.</p></article><article><b>03</b><h3>Route</h3><p>Choose tailor, fast apply, review, or skip using deterministic policy.</p></article><article><b>04</b><h3>Explain</h3><p>Keep reasons and gaps beside the score so a human can disagree.</p></article></div>
+    </section>
+  </main>
+  <footer><p>JD X-ray · Opportunity explorer · Synthetic data only</p><a href="/">Analyze a real JD →</a></footer>
+  <script type="module" src="/opportunities/app.js?v=1"></script>
+</body>
+</html>

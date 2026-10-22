@@ -11,6 +11,8 @@ does not tell you, and which questions are worth asking before you spend time ap
 **[Try the live demo](https://career-os-public-demo.demianman.chatgpt.site/?v=10)** — no account or
 profile required. The immediate analysis runs in your browser.
 
+The same public product also includes a separate **[Opportunity explorer](https://career-os-public-demo.demianman.chatgpt.site/opportunities)** for searching and comparing a clearly synthetic, privacy-safe decision queue. It demonstrates fit scores, routes, gaps, and traceable evidence without shipping anyone's resume or application history.
+
 ![JD X-ray live interface](public/jd-xray-demo.png)
 
 ## One posting, read beyond the title
@@ -49,6 +51,7 @@ pretending the text proves more than it does.**
 - normalizes hourly and annual compensation using a visible assumption;
 - produces targeted questions for the recruiter or hiring manager;
 - ships a downloadable Chrome/Edge side-panel prototype for analyzing a posting in context.
+- includes a separate opportunity explorer for route filtering, score comparison, and decision-detail inspection using synthetic data only.
 
 An optional **Deep Check** backend is designed for semantic model analysis and sourced web research.
 It is intentionally disabled in the public demo until a provider key and production abuse controls
